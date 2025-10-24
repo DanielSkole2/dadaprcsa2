@@ -31,31 +31,31 @@ int main() {
 
     //starting tests
     if (system("./fauxgrep-mt mad Tgrep1.txt") == 0) {
-        printf("fauxgrep Single file search passed\n");
+        printf("fauxgrep-mt Single file search passed\n");
     } 
     else {
-        printf("fauxgrep Single file search failed\n");
+        printf("fauxgrep-mt Single file search failed\n");
     }
 
     if (system("./fauxgrep-mt kylling Tgrep1.txt Tgrep2.txt Tgrep3.txt") == 0) {
-        printf("fauxgrep Multi file search passed\n");
+        printf("fauxgrep-mt Multi file search passed\n");
     } 
     else {
-        printf("fauxgrep Multi file search failed\n");
+        printf("fauxgrep-mt Multi file search failed\n");
     }
 
      if (system("./fauxgrep-mt -n 2 kylling Tgrep1.txt Tgrep2.txt Tgrep3.txt") == 0) {
-        printf("fauxgrep Multithread search passed\n");
+        printf("fauxgrep-mt Multithread search passed\n");
     } 
     else {
-        printf("fauxgrep Multithread file search failed\n");
+        printf("fauxgrep-mt Multithread file search failed\n");
     }
 
     if (system("./fauxgrep-mt kebab Tgrep1.txt Tgrep2.txt Tgrep3.txt") == 0) {
-        printf("fauxgrep No match search passed\n");
+        printf("fauxgrep-mt No match search passed\n");
     } 
     else {
-        printf("fauxgrep No match search failed\n");
+        printf("fauxgrep-mt No match search failed\n");
     }
     return 0;
 }
