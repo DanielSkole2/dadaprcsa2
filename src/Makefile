@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-g -Wall -Wextra -pedantic -std=gnu99 -pthread
 EXAMPLES=fibs fauxgrep fauxgrep-mt fhistogram fhistogram-mt
-TESTS=Test_files/FG_test Test_files/FH_test Test_files/JQ_test
+TESTS=Test_files/FG_test Test_files/FH_test Test_files/JQ_test Test_files/Time_test
 
 .PHONY: all test clean ../src.zip
 
@@ -20,6 +20,7 @@ clean:
 	rm -rf $(TESTS) $(EXAMPLES) *.o core
 	rm -rf test1.txt test2.txt test3.txt
 	rm -rf Tgrep1.txt Tgrep2.txt Tgrep3.txt
+	rm -rf speedfhtest.txt speedfgtest.txt
 
 zip: ../src.zip
 
