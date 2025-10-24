@@ -10,7 +10,7 @@
 #include "../job_queue.h"
 
 int main() {
-
+    //creating test data
     FILE *fptr;
     fptr = fopen("test1.txt", "w");
     fprintf(fptr, "this is test file 1\n");
@@ -24,6 +24,7 @@ int main() {
     fprintf(fptr, "this is test file 3\n");
     fclose(fptr);
 
+    //starting tests
     if (system("./fhistogram-mt test1.txt") == 0) {
         printf("fhistogram Single file test passed\n");
     } 
