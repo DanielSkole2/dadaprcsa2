@@ -29,6 +29,7 @@ int main() {
     fprintf(fptr, "tid til at sulte\n");
     fclose(fptr);
 
+    //starting tests
     if (system("./fauxgrep-mt mad Tgrep1.txt") == 0) {
         printf("fauxgrep Single file search passed\n");
     } 
