@@ -10,6 +10,10 @@
 #include <sys/time.h>
 #include "../job_queue.h"
 
+
+#define FH_TEST_FILE "speedfhtest.txt"
+#define FG_TEST_FILE "speedfgtest.txt"
+
 long gettimems() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -25,17 +29,24 @@ long getbytes(const char *filename) {
 }
 
 int main() {
-    //creates input file for fhistogram
     FILE *fptr;
-    fptr = fopen("Test_files/Inputs/speedfhtest.txt", "w");
+    fptr = fopen(FH_TEST_FILE, "w");
+    if (fptr == NULL) {
+        perror("Error opening FH_TEST_FILE");
+        return 1;
+    }
     for (int i = 0; i < 1000; i++) {
         fprintf(fptr, "%d kylling\n", i);
     }
     fclose(fptr);
 
-    //creates input file for fauxgrep
+    
     FILE *fptr2;
-    fptr2 = fopen("Test_files/Inputs/speedfgtest.txt", "w");
+    fptr2 = fopen(FG_TEST_FILE, "w");
+    if (fptr2 == NULL) {
+        perror("Error opening FG_TEST_FILE");
+        return 1;
+    }
     for (int i = 0; i < 1000; i++) {
         if (i % 10 == 0) {
             fprintf(fptr2, "kylling\n");
@@ -45,39 +56,67 @@ int main() {
         }
     }
     fclose(fptr2);
+    
+    
+    long fh_bytes = getbytes(FH_TEST_FILE);
+    long fg_bytes = getbytes(FG_TEST_FILE);
+    
+    
+    char command_buffer[512];
+    
+    
+    printf("\n--- FHistogram Benchmarks ---\n");
 
-    //singlethread test fhistogram
-    int starttime = gettimems();
-    system("./fhistogram Test_files/Inputs/speedfhtest.txt");
-    int endtime = gettimems();
-    printf("FH singlethread time is %d ms\n", endtime - starttime);
-    printf("FH singlethread throughput is %f files per sec\n",(float)1.0/((endtime - starttime)/1000.0));
-    printf("FH singlethread throughput is %f bytes per sec\n", (long)getbytes("Test_files/Inputs/speedfhtest.txt")/((endtime - starttime)/1000.0));
+    
+    long starttime = gettimems();
+    snprintf(command_buffer, sizeof(command_buffer), "./fhistogram %s", FH_TEST_FILE);
+    system(command_buffer);
+    long endtime = gettimems();
+    int time_ms = endtime - starttime;
+
+    printf("FH singlethread time is %d ms\n", time_ms);
+    printf("FH singlethread throughput is %f files per sec\n",(float)1.0/((float)time_ms/1000.0));
+    printf("FH singlethread throughput is %f bytes per sec\n", (float)fh_bytes/((float)time_ms/1000.0));
 
 
-    //multithread test fhistogram
+    
     starttime = gettimems();
-    system("./fhistogram-mt -n 2 Test_files/Inputs/speedfhtest.txt");
+    snprintf(command_buffer, sizeof(command_buffer), "./fhistogram-mt -n 2 %s", FH_TEST_FILE);
+    system(command_buffer);
     endtime = gettimems();
-    printf("FH multithread time is %d ms\n", endtime - starttime);
-    printf("FH multihread throughput is %f files per sec\n",(float)1.0/((endtime - starttime)/1000.0));
-    printf("FH multithread throughput is %f bytes per sec\n", (long)getbytes("Test_files/Inputs/speedfhtest.txt")/((endtime - starttime)/1000.0));
+    time_ms = endtime - starttime;
 
-    //singlethread test fauxgrep
-    starttime = gettimems();
-    system("./fauxgrep kylling Test_files/Inputs/speedfgtest.txt");
-    endtime = gettimems();
-    printf("FG singlethread time is %d ms\n", endtime - starttime);
-    printf("FG singlethread throughput is %f files per sec\n",(float)1.0/((endtime - starttime)/1000.0));
-    printf("FG singlethread throughput is %f bytes per sec\n", (long)getbytes("Test_files/Inputs/speedfgtest.txt")/((endtime - starttime)/1000.0));
+    printf("FH multithread time is %d ms\n", time_ms);
+    printf("FH multihread throughput is %f files per sec\n",(float)1.0/((float)time_ms/1000.0));
+    printf("FH multithread throughput is %f bytes per sec\n", (float)fh_bytes/((float)time_ms/1000.0));
 
-    //multithread test fauxgrep
+    
+    
+    printf("\n--- Fauxgrep Benchmarks ---\n");
+
+    
     starttime = gettimems();
-    system("./fauxgrep-mt -n 2 kylling Test_files/Inputs/speedfgtest.txt");
+    snprintf(command_buffer, sizeof(command_buffer), "./fauxgrep kylling %s", FG_TEST_FILE);
+    system(command_buffer);
     endtime = gettimems();
-    printf("FG multithread time is %d ms\n", endtime - starttime);
-    printf("FG multithread throughput is %f files per sec\n",(float)1.0/((endtime - starttime)/1000.0));
-    printf("FG multithread throughput is %f bytes per sec\n", (long)getbytes("Test_files/Inputs/speedfgtest.txt")/((endtime - starttime)/1000.0));
+    time_ms = endtime - starttime;
+
+    printf("FG singlethread time is %d ms\n", time_ms);
+    printf("FG singlethread throughput is %f files per sec\n",(float)1.0/((float)time_ms/1000.0));
+    printf("FG singlethread throughput is %f bytes per sec\n", (float)fg_bytes/((float)time_ms/1000.0));
+
+    
+    starttime = gettimems();
+    snprintf(command_buffer, sizeof(command_buffer), "./fauxgrep-mt -n 2 kylling %s", FG_TEST_FILE);
+    system(command_buffer);
+    endtime = gettimems();
+    time_ms = endtime - starttime;
+
+    printf("FG multithread time is %d ms\n", time_ms);
+    printf("FG multithread throughput is %f files per sec\n",(float)1.0/((float)time_ms/1000.0));
+    printf("FG multithread throughput is %f bytes per sec\n", (float)fg_bytes/((float)time_ms/1000.0));
+
+    printf("\n--- Benchmarks Finished ---\n");
 
     return 0;
 }
