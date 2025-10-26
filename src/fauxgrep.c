@@ -1,5 +1,3 @@
-// Setting _DEFAULT_SOURCE is necessary to activate visibility of
-// certain header file contents on GNU/Linux systems.
 #define _DEFAULT_SOURCE
 
 #include <stdio.h>
@@ -11,8 +9,7 @@
 #include <sys/stat.h>
 #include <fts.h>
 
-// err.h contains various nonstandard BSD extensions, but they are
-// very handy.
+
 #include <err.h>
 
 int fauxgrep_file(char const *needle, char const *path) {
@@ -50,11 +47,7 @@ int main(int argc, char * const *argv) {
   char const *needle = argv[1];
   char * const *paths = &argv[2];
 
-  // FTS_LOGICAL = follow symbolic links
-  // FTS_NOCHDIR = do not change the working directory of the process
-  //
-  // (These are not particularly important distinctions for our simple
-  // uses.)
+  
   int fts_options = FTS_LOGICAL | FTS_NOCHDIR;
 
   FTS *ftsp;

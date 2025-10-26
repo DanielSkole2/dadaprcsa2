@@ -11,25 +11,43 @@ int job_queue_destroy(struct job_queue *job_queue);
 int job_queue_pop(struct job_queue *job_queue, void **data);
 
 int main() {
+    int test_status = 0;
+    
+    printf("\n--- Job Queue (JQ) Tests ---\n");
+
     struct job_queue JQ;
     if (job_queue_init(&JQ, 10) == 0) {
-        printf("init passed\n");
-    
+        printf(" -> PASS: init passed\n");
+        fflush(stdout);
+        
         int data = 69;
         if (job_queue_push(&JQ, &data) == 0) {
-            printf("push passed\n");
+            printf(" -> PASS: push passed\n");
+            fflush(stdout);
+        } else {
+            printf(" -> FAIL: push failed\n");
+            test_status = 1;
         }
 
         void *result;
         if (job_queue_pop(&JQ, &result) == 0) {
-            printf("pop passed\n");
+            printf(" -> PASS: pop passed\n");
+            fflush(stdout);
+        } else {
+            printf(" -> FAIL: pop failed\n");
+            test_status = 1;
         }
 
         job_queue_destroy(&JQ);
-        printf("Job queue passed\n");
+        printf("Job queue tests complete.\n");
+        fflush(stdout);
     }
     else {
-        printf("JQ failed\n");
+        printf(" -> FAIL: JQ init failed\n");
+        test_status = 1;
     }
-    return 0;
+    
+    printf("--- Job Queue Tests finished ---\n\n"); 
+    
+    return test_status;
 }

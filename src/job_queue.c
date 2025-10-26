@@ -22,7 +22,7 @@ int job_queue_init(struct job_queue *job_queue, int capacity) {
     job_queue->count = 0;
     job_queue->destroy_flag = false;
 
-      
+    
     if (pthread_mutex_init(&job_queue->lock, NULL) != 0) {
         free(job_queue->buffer);
         return -1; 
@@ -50,21 +50,14 @@ int job_queue_destroy(struct job_queue *job_queue) {
 
     
     while (job_queue->count > 0) {
-        
         assert(pthread_cond_wait(&job_queue->not_empty, &job_queue->lock) == 0);
     }
-
     
     
     assert(pthread_cond_broadcast(&job_queue->not_empty) == 0);
+    assert(pthread_cond_broadcast(&job_queue->not_full) == 0);
 
     assert(pthread_mutex_unlock(&job_queue->lock) == 0);
-
-    
-    assert(pthread_mutex_destroy(&job_queue->lock) == 0);
-    assert(pthread_cond_destroy(&job_queue->not_empty) == 0);
-    assert(pthread_cond_destroy(&job_queue->not_full) == 0);
-    free(job_queue->buffer);
 
     return 0;
 }
@@ -81,6 +74,7 @@ int job_queue_push(struct job_queue *job_queue, void *data) {
     
     while (job_queue->count == job_queue->capacity) {
         assert(pthread_cond_wait(&job_queue->not_full, &job_queue->lock) == 0);
+        
         
         if (job_queue->destroy_flag) {
             assert(pthread_mutex_unlock(&job_queue->lock) == 0);
@@ -115,28 +109,18 @@ int job_queue_pop(struct job_queue *job_queue, void **data) {
     }
 
     
-
-    
-    if (job_queue->count == 0 && job_queue->destroy_flag) {
-        assert(pthread_mutex_unlock(&job_queue->lock) == 0);
-        return -1;
-    }
-
-    
     *data = job_queue->buffer[job_queue->head];
     job_queue->head = (job_queue->head + 1) % job_queue->capacity;
     job_queue->count--;
 
     
+    
     assert(pthread_cond_signal(&job_queue->not_full) == 0);
 
-    assert(pthread_mutex_unlock(&job_queue->lock) == 0);
-
     
-    if (job_queue->count == 0 && job_queue->destroy_flag) {
-        assert(pthread_cond_signal(&job_queue->not_empty) == 0);
-    }
+    assert(pthread_cond_signal(&job_queue->not_empty) == 0);
 
-
+    assert(pthread_mutex_unlock(&job_queue->lock) == 0);
+    
     return 0; 
 }

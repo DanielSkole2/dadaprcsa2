@@ -10,41 +10,58 @@
 #include "../job_queue.h"
 
 int main() {
-    //creating test data
     FILE *fptr;
-    fptr = fopen("Test_files/Inputs/test1.txt", "w");
+
+    fptr = fopen("test1.txt", "w");
     fprintf(fptr, "this is test file 1\n");
     fclose(fptr);
 
-    fptr = fopen("Test_files/Inputs/test2.txt", "w");
+    fptr = fopen("test2.txt", "w");
     fprintf(fptr, "this is test file 2\n");
     fclose(fptr);
 
-    fptr = fopen("Test_files/Inputs/test3.txt", "w");
+    fptr = fopen("test3.txt", "w");
     fprintf(fptr, "this is test file 3\n");
     fclose(fptr);
 
-    //starting tests
-    if (system("./fhistogram-mt -n 2 test1.txt") == 0) {
-        printf("fhistogram-mt Single file test passed\n");
-    } 
-    else {
-        printf("fhistogram-mt Single file test failed\n");
-    }
+    int test_status = 0;
 
-    if (system("./fhistogram-mt -n 2 test1.txt test2.txt test3.txt") == 0) {
-        printf("fhistogram-mt Multiple file test passed\n");
-    }
-    else {
-        printf("fhistogram-mt Multiple file test failed\n");
-    }
+    printf("\n--- fhistogram-mt Tests ---\n");
 
-    if (system("./fhistogram-mt -n 2 test1.txt test2.txt test3.txt") == 0) {
-        printf("fhistogram-mt multithread test passed\n");
+    printf("Test 1: Single file test (test1.txt). Output follows:\n");
+    fflush(stdout);
+    int status1 = system("./fhistogram-mt test1.txt");
+    if (status1 == 0) {
+        printf(" -> PASS: fhistogram-mt Single file test passed (Status 0).\n");
+    } else {
+        printf(" -> FAIL: fhistogram-mt Single file test failed (Exit Status: %d).\n", status1);
+        test_status = 1;
     }
-    else {
-        printf("fhistogram-mt multithread test failed\n");
-    }
+    fflush(stdout);
 
-    return 0;
+    printf("\nTest 2: Multiple file test (3 files). Output follows:\n");
+    fflush(stdout);
+    int status2 = system("./fhistogram-mt test1.txt test2.txt test3.txt");
+    if (status2 == 0) {
+        printf(" -> PASS: fhistogram-mt Multiple file test passed (Status 0).\n");
+    } else {
+        printf(" -> FAIL: fhistogram-mt Multiple file test failed (Exit Status: %d).\n", status2);
+        test_status = 1;
+    }
+    fflush(stdout);
+
+    printf("\nTest 3: Multithread test (-n 2). Output follows:\n");
+    fflush(stdout);
+    int status3 = system("./fhistogram-mt -n 2 test1.txt test2.txt test3.txt");
+    if (status3 == 0) {
+        printf(" -> PASS: fhistogram-mt multithread test passed (Status 0).\n");
+    } else {
+        printf(" -> FAIL: fhistogram-mt multithread test failed (Exit Status: %d).\n", status3);
+        test_status = 1;
+    }
+    fflush(stdout);
+
+    printf("\n--- fhistogram-mt Tests finished ---\n\n");
+
+    return test_status;
 }

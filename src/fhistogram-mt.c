@@ -1,5 +1,3 @@
-// Setting _DEFAULT_SOURCE is necessary to activate visibility of
-// certain header file contents on GNU/Linux systems.
 #define _DEFAULT_SOURCE
 
 #include <stdio.h>
@@ -18,8 +16,6 @@
 pthread_mutex_t stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t histogram_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// err.h contains various nonstandard BSD extensions, but they are        
-// very handy.    
 #include <err.h>
 
 #include "histogram.h"
@@ -43,7 +39,7 @@ int fhistogram_job(char const *path) {
     char c;
     const int UPDATE_INTERVAL = 100000;
 
-    while (fread(&c, sizeof(c), 1, f) == 1) {
+    while (fread(&c, sizeof(c), 1, f) == 1) { 
         i++;
         update_histogram(local_histogram, c);
 
@@ -53,11 +49,15 @@ int fhistogram_job(char const *path) {
             assert(pthread_mutex_unlock(&histogram_mutex) == 0);
 
             
+            
             assert(pthread_mutex_lock(&stdout_mutex) == 0);
+            move_lines(9); 
             print_histogram(global_histogram);
             assert(pthread_mutex_unlock(&stdout_mutex) == 0);
         }
     }
+    
+    
 
     fclose(f);
 
@@ -65,11 +65,6 @@ int fhistogram_job(char const *path) {
     assert(pthread_mutex_lock(&histogram_mutex) == 0);
     merge_histogram(local_histogram, global_histogram);
     assert(pthread_mutex_unlock(&histogram_mutex) == 0);
-
-    
-    assert(pthread_mutex_lock(&stdout_mutex) == 0);
-    print_histogram(global_histogram);
-    assert(pthread_mutex_unlock(&stdout_mutex) == 0);
 
     return 0;
 }
@@ -80,13 +75,18 @@ void* worker_histogram(void *arg) {
 
     while (1) {
         char *path = NULL;
-        if (job_queue_pop(jq, (void**)&path) == 0) {
+        int status = job_queue_pop(jq, (void**)&path);
+        
+        if (status == 0) {
             
             fhistogram_job(path);
             free(path); 
-        } else {
+        } else if (status == -1) {
             
             break;
+        } else {
+            
+            break; 
         }
     }
 
@@ -101,6 +101,7 @@ int main(int argc, char * const *argv) {
 
     int num_threads = 1;
     char * const *paths = &argv[1];
+    int current_arg = 1;
 
     if (argc > 3 && strcmp(argv[1], "-n") == 0) {
         num_threads = atoi(argv[2]);
@@ -108,32 +109,38 @@ int main(int argc, char * const *argv) {
         if (num_threads < 1) {
             err(1, "invalid thread count: %s", argv[2]);
         }
-
-        paths = &argv[3];
+        current_arg = 3;
     } else {
-        paths = &argv[1];
+        current_arg = 1;
+    }
+    paths = &argv[current_arg];
+    
+    
+    struct job_queue *jq = malloc(sizeof(struct job_queue));
+    if (jq == NULL) {
+        err(1, "malloc failed for job_queue");
     }
 
     
-    
-    
-    struct job_queue jq;
-    if (job_queue_init(&jq, 64) != 0) {
+    if (job_queue_init(jq, 64) != 0) {
+        free(jq);
         err(1, "job_queue_init() failed");
     }
 
     
     pthread_t *threads = calloc(num_threads, sizeof(pthread_t));
     if (threads == NULL) {
+        free(jq);
         err(1, "calloc failed for threads");
     }
     for (int i = 0; i < num_threads; i++) {
-        if (pthread_create(&threads[i], NULL, worker_histogram, &jq) != 0) {
+        
+        if (pthread_create(&threads[i], NULL, worker_histogram, jq) != 0) {
+            free(jq);
+            free(threads);
             err(1, "pthread_create() failed");
         }
     }
-
-    
 
     
     int fts_options = FTS_LOGICAL | FTS_NOCHDIR;
@@ -150,7 +157,8 @@ int main(int argc, char * const *argv) {
         case FTS_D:
             break;
         case FTS_F:
-            if (job_queue_push(&jq, strdup(p->fts_path)) != 0) {
+            
+            if (job_queue_push(jq, strdup(p->fts_path)) != 0) {
                 warn("job_queue_push failed");
             }
             break;
@@ -162,7 +170,8 @@ int main(int argc, char * const *argv) {
     fts_close(ftsp);
 
 
-    if (job_queue_destroy(&jq) != 0) {
+    
+    if (job_queue_destroy(jq) != 0) {
         err(1, "job_queue_destroy() failed");
     }
 
@@ -175,9 +184,14 @@ int main(int argc, char * const *argv) {
     free(threads);
 
     
-    move_lines(9);
+    assert(pthread_mutex_lock(&stdout_mutex) == 0);
     
+    move_lines(9); 
+    print_histogram(global_histogram);
+    assert(pthread_mutex_unlock(&stdout_mutex) == 0);
+
     
+    free(jq);
 
     return 0;
 }
