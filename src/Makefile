@@ -18,9 +18,9 @@ test: $(TESTS)
 
 clean:
 	rm -rf $(TESTS) $(EXAMPLES) *.o core
-	rm -rf test1.txt test2.txt test3.txt
-	rm -rf Tgrep1.txt Tgrep2.txt Tgrep3.txt
-	rm -rf speedfhtest.txt speedfgtest.txt
+	rm -rf Test_files/Inputs/test1.txt Test_files/Inputs/test2.txt Test_files/Inputs/test3.txt
+	rm -rf Test_files/Inputs/Tgrep1.txt Test_files/Inputs/Tgrep2.txt Test_files/Inputs/Tgrep3.txt
+	rm -rf Test_files/Inputs/speedfhtest.txt Test_files/Inputs/speedfgtest.txt
 
 zip: ../src.zip
 
